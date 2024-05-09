@@ -166,10 +166,6 @@ void SpeckREncrypt(const uint32_t Pt[], uint32_t *Ct, speckr_ctx *CTX) {
     x = Ct[1]; 
     y = Ct[0];
     
-    /* 
-     * without the following swap, in the case of out-of-sequence packets (ie. on-the-fly UDP decryption) 
-     * set SPECKR_ROUNDS to 26 and rehash the password after 4 Gb and set CTX->NR counter to packet_no x slice_size + 8 x offset
-     */
     aux = x; 
     x = y; 
     y = aux;
@@ -249,10 +245,5 @@ void SpeckREncrypt_packet(const uint32_t Pt[], uint32_t *Ct, speckr_ctx *CTX, of
             CTX->it2 = 0;
         }
     }
-
-    /* 
-     * without the following swap, in the case of out-of-sequence packets (ie. on-the-fly UDP decryption) 
-     * set SPECKR_ROUNDS to 26 and rehash the password after 4 Gb and set CTX->NR counter to packet_no x slice_size + 8 x offset
-     */
 }
 
