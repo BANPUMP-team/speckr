@@ -220,9 +220,9 @@ void SpeckREncrypt_packet(const uint32_t Pt[], uint32_t *Ct, speckr_ctx *CTX, of
     Ct[0] = (wbuf[0] << 24) | (wbuf[0] >> 24) | ((wbuf[0] << 8) & 0xFF0000) | ((wbuf[0] >> 8) & 0xFF00); // y
     Ct[1] = (wbuf[1] << 24) | (wbuf[1] >> 24) | ((wbuf[1] << 8) & 0xFF0000) | ((wbuf[1] >> 8) & 0xFF00); // x
     
-    for(i = 0; i < 26; i++) {
-        ER32(Ct[1], Ct[0], CTX->derived_key_r[i]);
-    } // end of rounds loop
+    for(i = 0; i < SPECKR_ROUNDS; i++) {
+        ER32(Ct[1], Ct[0], CTX->derived_key_r[i + CTX->loop]);
+    } // end of rounds loop  
 
     x = Ct[1]; 
     y = Ct[0];
@@ -252,5 +252,7 @@ void SpeckREncrypt_packet(const uint32_t Pt[], uint32_t *Ct, speckr_ctx *CTX, of
             CTX->it2 = 0;
         }
     }
+
+    CTX->loop = (CTX->loop + SPECKR_ROUNDS) % (25 - SPECKR_ROUNDS);
 }
 
