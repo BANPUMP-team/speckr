@@ -21,15 +21,47 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #include "speckr.h"
 
 #define MAXPWDLEN 32
 
+/*
+ * cracklib is better for measuring weak passwords
+ */
+
+int isStrongPassword(const char *password) {
+    int length = strlen(password);
+
+    // Criteria for a strong password
+    int hasUpper = 0;
+    int hasLower = 0;
+    int hasDigit = 0;
+    int hasSpecial = 0;
+
+    // Check each character of the password
+    for (int i = 0; i < length; i++) {
+        if (isupper(password[i])) {
+            hasUpper = 1;
+        } else if (islower(password[i])) {
+            hasLower = 1;
+        } else if (isdigit(password[i])) {
+            hasDigit = 1;
+        } else if (ispunct(password[i])) {
+            hasSpecial = 1;
+        }
+    }
+
+    // Password is strong if all criteria are met
+    return length >= 10 && hasUpper && hasLower && hasDigit && hasSpecial;
+}
+
+
 int main(int argc, char *argv[]) {
     struct termios original,noecho;
     struct stat statbuf;
-    speckr_ctx CTX, CTXcopy;
+    speckr_ctx CTX;
     uint32_t pt[2], ct[2];
     char passwd[MAXPWDLEN];
     size_t pwdlen;
@@ -47,7 +79,11 @@ int main(int argc, char *argv[]) {
 	    return 1;
     }
 
+    /* get original filesize */
+
     fsize = statbuf.st_size;
+
+    /* read password without printing echo bytes on screen */
 
     tcgetattr(STDIN_FILENO,&original);
     noecho = original;
@@ -60,21 +96,35 @@ int main(int argc, char *argv[]) {
     passwd[pwdlen-1] = '\0';
     tcsetattr(STDIN_FILENO, TCSANOW, &original);
 
-    if (pwdlen < 10) {
-        fprintf(stdout, "Password too short! Aborting.\n");
-        return (10);
-    }
-	
-    speckr_init(&CTX, passwd);
-    speckr_ctx_dup(&CTXcopy, &CTX);
+    if (!isStrongPassword(passwd)) {
+	fprintf(stderr, "Weak password.\n Use uppercase, lowercase, digits and special chars -- at least 10 bytes long.\n");
+	return (10);
+    }	    
 
-    fp = fopen(argv[1], "r+");
+    /*
+     * use argon2 to derive sboxes and initial internal states based on the given password
+     * this stuff is stored in the speckr context "CTX" object including the expanded key
+     */
+
+    speckr_init(&CTX, passwd);
+//    speckr_ctx_dup(&CTXcopy, &CTX); // not needed just an example
+
+    
+    /*
+     *  open file for reading and writing 
+     */
+
+    fp = fopen(argv[1], "rb+");
     if (fp == NULL) {
 	perror("fopen()");
 	return 2;
     }
 
     clock_t t0 = clock();
+
+    /*
+     * read 64 bits, encrypt/decrypt, overwrite 64 bits
+     */
 
     ret=8;
     while(ret==8) {
@@ -87,9 +137,9 @@ int main(int argc, char *argv[]) {
 
        SpeckREncrypt(pt, ct, &CTX);
 
-       fseek(fp, 0-ret, SEEK_CUR);
+       fseek(fp, 0-ret, SEEK_CUR); /* prepare to overwrite plaintext 64 bits with ciphertext */
 
-       if (fwrite(ct, 8, 1, fp)!=1) { // write 64 bits
+       if (fwrite(ct, 8, 1, fp)!=1) { /* overwrite 64 bits of ciphertext */
             perror("fwrite()");
             exit(EXIT_FAILURE);
         }
@@ -97,16 +147,26 @@ int main(int argc, char *argv[]) {
     }
 
     fclose(fp);
+
+    /*
+     * if we read less than 8 bytes because filesize is not a multiple of 64 bits
+     * we need to truncate to original filesize since surplus encrypted bits are
+     * not from the original plaintext but dummy bytes
+     */
+
     if (truncate(argv[1], fsize) == -1) {
 	perror("truncate()");
 	exit(EXIT_FAILURE);
     }
 
+    /*
+     * some clock dummy measurement to get an idea
+     */
+
     clock_t t1 = clock();    
 
     printf("Done (%Lf)\n", (long double)(t1 - t0));
 
-  
     return 0;
 }
 

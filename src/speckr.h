@@ -33,7 +33,7 @@ void SpeckREncrypt(const uint32_t Pt[], uint32_t *Ct, speckr_ctx *CTX);
  *  is incremented 8 bytes at a time (blocksize is 64 bits)
  */
 void SpeckREncrypt_packet(const uint32_t Pt[], uint32_t *Ct, speckr_ctx *CTX, 
-		off_t packet_no, size_t packet_size, off_t offset);
+		off_t packet_no, size_t packet_size, off_t offset, int flag_resetctr);
 void speckr_init(speckr_ctx *CTX, const char *password);
 /* copy CTX2 into CTX1 */
 void speckr_ctx_dup(speckr_ctx *CTX1, speckr_ctx *CTX2);
