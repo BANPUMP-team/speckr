@@ -231,7 +231,7 @@ void SpeckREncrypt_packet(const uint32_t Pt[], uint32_t *Ct, speckr_ctx *CTX, of
     x = y;
     y = aux;
 
-    // no need to incremnt CTX->NR because the next value is deduced from given parameters for packet_no, size and offset
+    // no need to increment CTX->NR because the next value is deduced from given parameters for packet_no, size and offset
 
     y = CTX->Sbox1[y >> 24 & 0xFF] << 24 | CTX->Sbox1[y >> 16 & 0xFF] << 16 | CTX->Sbox1[y >> 8 & 0xFF] << 8 | CTX->Sbox1[y & 0xFF];
     Ct[0] ^= y ^ Pt[0];
