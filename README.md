@@ -5,4 +5,6 @@ We managed to produce random output with only 3 rounds, testing with AIS31 tests
 
 Using #define SPECKR_ROUNDS 5 passes all randomness tests to the point of plausible deniability. The default SPECKR_ROUNDS value is 7 based on the seminal paper.
 
+IMPORTANT: this is a cipher in counter (CTR) mode. 
+
     
