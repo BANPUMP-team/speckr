@@ -201,13 +201,11 @@ void SpeckREncrypt(const uint32_t Pt[], uint32_t *Ct, speckr_ctx *CTX) {
  *  packet_no, packet_size and offset are provided by the caller and offset is incremented 8 bytes at a time (blocksize is 64 bits)
  */
 
-void SpeckREncrypt_packet(const uint32_t Pt[], uint32_t *Ct, speckr_ctx *CTX, off_t packet_no, size_t packet_size, off_t offset, int first_call_in_packet) { 
+void SpeckREncrypt_async(const uint32_t Pt[], uint32_t *Ct, speckr_ctx *CTX, off_t packet_no, size_t packet_size, off_t offset) { 
     uint32_t i;
     uint32_t x, y, aux;
     uint32_t wbuf[2];
     uint64_t datasize;
-
-    if (first_call_in_packet) speckr_reset_ctr(CTX); // this is necessary at the first call in every packet
 
     datasize = packet_no * packet_size + 8 * offset; // 64 bits at a time
     split_uint64_to_uint32(datasize, &CTX->NR, &CTX->NL); // this is always necessary here
