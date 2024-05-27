@@ -66,11 +66,11 @@ int main(int argc, char *argv[]) {
     char passwd[MAXPWDLEN];
     size_t pwdlen;
     off_t fsize;
-    FILE *fp;
+    FILE *fp, *fpout;
     int ret;
 
-    if (argc < 2) {
-	fprintf(stderr, "Usage: %s filename\n", argv[0]);
+    if (argc < 3) {
+	fprintf(stderr, "Usage: %s input-filename output-filename\n", argv[0]);
 	return 0;
     }
 
@@ -96,6 +96,8 @@ int main(int argc, char *argv[]) {
     passwd[pwdlen-1] = '\0';
     tcsetattr(STDIN_FILENO, TCSANOW, &original);
 
+    /* maybe we should read the password twice and compare, add checksum for original */
+
     if (!isStrongPassword(passwd)) {
 	fprintf(stderr, "Weak password.\n Use uppercase, lowercase, digits and special chars -- at least 10 bytes long.\n");
 	return (10);
@@ -107,9 +109,12 @@ int main(int argc, char *argv[]) {
      */
 
     speckr_init(&CTX, passwd);
-//    speckr_ctx_dup(&CTXcopy, &CTX); // not needed just an example
-
     
+    fpout = fopen(argv[2], "w");
+    if (fpout == NULL) {
+	    perror("fopen() for writing");
+	    return 3;
+    }
     /*
      *  open file for reading and writing 
      */
@@ -137,16 +142,14 @@ int main(int argc, char *argv[]) {
 
        SpeckREncrypt(pt, ct, &CTX);
 
-       fseek(fp, 0-ret, SEEK_CUR); /* prepare to overwrite plaintext 64 bits with ciphertext */
-
-       if (fwrite(ct, 8, 1, fp)!=1) { /* overwrite 64 bits of ciphertext */
+       if (fwrite(ct, 8, 1, fpout)!=1) { /* overwrite 64 bits of ciphertext */
             perror("fwrite()");
             exit(EXIT_FAILURE);
         }
 
     }
 
-    fclose(fp);
+    fclose(fp); fclose(fpout);
 
     /*
      * if we read less than 8 bytes because filesize is not a multiple of 64 bits
@@ -154,8 +157,8 @@ int main(int argc, char *argv[]) {
      * not from the original plaintext but dummy bytes
      */
 
-    if (truncate(argv[1], fsize) == -1) {
-	perror("truncate()");
+    if (truncate(argv[2], fsize) == -1) {
+	perror("truncate() output file");
 	exit(EXIT_FAILURE);
     }
 
@@ -169,4 +172,3 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-
