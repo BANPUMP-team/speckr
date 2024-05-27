@@ -31,7 +31,7 @@ void SpeckREncrypt(const uint32_t Pt[], uint32_t *Ct, speckr_ctx *CTX);
  *  We recommend fixed size for the packet_size to avoid repeating the counter
  *
  *  For now the *easy* way is to _reset_ctr() when new packet arrives in order
- *  to reset internal it1 and it2 Sbox counters. Counter mode conter is going
+ *  to reset internal it1 and it2 Sbox counters. Counter mode counter is going
  *  to be overwritten by the provided parameters:
  *
  *  packet_no, packet_size and offset are provided by the caller and offset
