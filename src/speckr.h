@@ -27,12 +27,16 @@ void SpeckRKeySchedule(uint32_t K[],uint32_t rk[]);
 void SpeckREncrypt(const uint32_t Pt[], uint32_t *Ct, speckr_ctx *CTX);
 
 /*
- *  This function is for encrypting out of order packets like UDP 
+ *  The _async() function is for encrypting out of order packets like UDP 
+ *  We recommend fixed size for the packet_size to avoid repeating the counter
  *
- *  recommends fixed size for the packet_size to avoid repeating the counter
+ *  For now the *easy* way is to _reset_ctr() when new packet arrives in order
+ *  to reset internal it1 and it2 Sbox counters. Counter mode conter is going
+ *  to be overwritten by the provided parameters:
  *
  *  packet_no, packet_size and offset are provided by the caller and offset
  *  is incremented 8 bytes at a time (blocksize is 64 bits)
+ *
  */
 void SpeckREncrypt_async(const uint32_t Pt[], uint32_t *Ct, speckr_ctx *CTX, 
 		off_t packet_no, size_t packet_size, off_t offset);
