@@ -39,7 +39,8 @@ void SpeckREncrypt(const uint32_t Pt[], uint32_t *Ct, speckr_ctx *CTX);
  *
  */
 void SpeckREncrypt_async(const uint32_t Pt[], uint32_t *Ct, speckr_ctx *CTX, 
-		off_t packet_no, size_t packet_size, off_t offset);
+		uint64_t packet_no, uint64_t packet_size, uint64_t offset);
+
 void speckr_init(speckr_ctx *CTX, const char *password);
 /* copy CTX2 into CTX1 */
 void speckr_ctx_dup(speckr_ctx *CTX1, speckr_ctx *CTX2);
